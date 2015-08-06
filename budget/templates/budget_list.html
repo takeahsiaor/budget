@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h3>Select budget to view</h3>
+    <a class="btn btn-primary" href="{% url 'create_budget' %}">New</a><br><br>
+    {% for budget in budget_list %}
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            Budget for {{budget.get_month_display}}, {{budget.year}}
+          </div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-9">
+                <a class="btn-sm btn-primary" href="{% url 'budget' budget.id %}">Details</a>
+                <a class="btn-sm btn-primary" href="{% url 'edit_categories' budget.id %}">Edit</a>
+                <a class="btn-sm btn-primary" href="{% url 'clone_budget' budget.id %}">Clone</a>
+              </div>
+              <div class="col-md-3">
+                <div class="pull-right">
+                  <button class="btn-xs btn-primary" data-toggle="modal" data-target="#delete-budget" data-deletion-url="{% url 'delete_budget' budget.id %}" data-budget-name="{{budget}}">Delete</button>
+                </div>
+              </div>
+            </div>
+            <hr>
+
+            {% for bc in budget.budgetcategory_set.all %}
+              <button class="btn btn-default">{{bc.category}} - ${{bc.amount}}</button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- modal -->
+<!-- Modal -->
+<div class="modal fade" id="delete-budget" tabindex="-1" role="dialog" aria-labelledby="delete-budget-title">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title" id="delete-budget-title">Confirm deletion</h4>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this budget? <br>
+        <br>
+        This will delete all transactions and categories associated with this budget as well.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-dismiss="modal">No, Nevermind</button>
+        <a id="confirm-deletion-link" class="btn btn-primary">You bet!</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- endmodal -->
+{% endblock %}
+
+{% block endloaders %}
+<script>
+  $('#delete-budget').on('show.bs.modal', function (event) {
+    var button = $(event.relatedTarget); // Button that triggered the modal
+    var budget_name = button.data('budget-name');
+    var deletion_url = button.data('deletion-url');
+    var modal = $(this);
+    modal.find('#delete-budget-title').text('Confirm deletion of '+ budget_name);
+    modal.find('#confirm-deletion-link').attr('href', deletion_url);
+  })
+</script>
+{% endblock %}

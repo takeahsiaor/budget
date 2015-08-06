@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h3>All recurring transactions</h3>
+    <a class="btn btn-primary" href="{% url 'add_recurring_transaction' %}">New</a><br><br>
+    <div class="row">
+      <div class="col-md-12">
+        <ul class="list-group">
+        {% for rt in recurring_transactions %}
+          <li class="list-group-item">
+            <div class="row">
+              <div class="col-md-9">
+                {% if rt.active %}
+                  <span class="label label-success">Active</span>
+                {% else %}
+                  <span class="label label-danger">Inactive</span>
+                {% endif %}
+                {{rt.amount}} {{rt.transaction_type}} in {{rt.category}} every {{rt.recurrences}}
+              </div>
+              <div class="col-md-3">
+                <div class="pull-right">
+                  <a href="{% url 'edit_recurring_transaction' rt.id %}" class="btn-sm btn-primary">Edit</a>
+                  <a href="{% url 'deactivate_recurring_transaction' rt.pk %}" class="btn-sm btn-primary">Delete</a>
+                </div>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+

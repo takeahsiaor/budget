@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h2>Editing {{budget}}</h2>
+    <a href="{% url 'budget' budget.id %}" class="btn-sm btn-primary">View Budget</a>
+    {% with category_formset.total_error_count as total_errors %}
+      {% if total_errors %}
+      <div class="row">
+        <div class="col-md-12">
+          <div class="alert alert-danger">
+            Please correct the {{total_errors}} error{{total_errors|pluralize}} below!
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if category_formset.non_form_errors %}
+      {% with category_formset.non_form_errors as non_form_errors %}        
+        {% include 'form_errors.html' %}
+      {% endwith %}
+    {% endif %}
+
+
+    {% if messages %}
+      {% include 'messages.html' %}
+    {% endif %}
+    <div class="row">
+      <div class="col-md-12">
+        <form role="form" method="post">
+          {% csrf_token %}
+          {{ category_formset.management_form }}
+          {% if category_formset.initial_forms %}
+            <h3>Existing Categories</h3>
+            <div class="row">
+                {% for form in category_formset.initial_forms %}
+                  <div class="col-md-4" id="{{form.prefix}}-container">
+                    {% for field in form %}
+                    <div class="form-group {{field.label}}">
+                      <label for="{{field.id_for_label}}">{{field.label}}</label>
+                      {% if field.errors %}
+                        {% for error in field.errors %}
+                          <div class="alert alert-danger">
+                            {{error}}
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                      {{field}}
+                    </div>
+                    {% endfor %}
+                    <button type="button" onClick="markForDelete('{{form.prefix}}');" class="btn-sm btn-primary">Delete</button>
+                    <hr>
+                  </div>
+                {% endfor %}
+            </div>
+            <hr>
+          {% endif %}
+          <h3>Add Category</h3>
+          <div class="row" id="add-category-forms">
+            {% for form in category_formset.extra_forms %}
+              <div class="col-md-4" id="{{form.prefix}}-container">
+                {% for field in form %}
+                <div class="form-group {{field.label}}">
+                  <label for="{{field.id_for_label}}">{{field.label}}</label>
+                  {% if field.errors %}
+                    {% for error in field.errors %}
+                      <div class="alert alert-danger">
+                        {{error}}
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                  {{field}}
+                </div>
+                {% endfor %}
+                <button type="button" onClick="markForDelete('{{form.prefix}}');"class="btn-sm btn-primary">Delete</button>
+                <hr>
+              </div>
+            {% endfor %}
+          </div>
+          <br>
+          <button type="button" onClick="addCategoryForm();" class="btn btn-primary">Add Another Category</button>
+          <hr>
+          <input type="submit" class="btn btn-primary" value="Submit">
+          <a href="{% url 'budgets' %}" class="btn btn-primary pull-right">Back to Budget List</a>
+        </form>
+      </div>
+      <div class="col-md-3">
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block endloaders %}
+<script type="text/html" id="add-category-form-template">
+  <div class="col-md-4" id="form-__prefix__-container">
+    {% for field in category_formset.empty_form %}
+    <div class="form-group {{field.label}}">
+      <label for="{{field.id_for_label}}">{{field.label}}</label>
+      {{field}}
+    </div>
+    {% endfor %}
+    <button type="button" onClick="markForDelete('form-__prefix__');"class="btn-sm btn-primary">Delete</button>
+    <hr>
+  </div>
+</script>
+
+<script>
+$(document).ready(function(){
+  $(".Delete").hide();
+})
+
+function markForDelete(form_str){
+  var formHTML = $('#' + form_str + '-container');
+  //hide the form
+  formHTML.fadeOut('slow');
+  //check the hidden checkbox
+  $('#id_'+form_str+'-DELETE').attr('checked', 'true');
+}
+
+function addCategoryForm(){
+  //get the current number of forms defined in management form
+  var form_count_str = $('#id_form-TOTAL_FORMS').attr('value');
+  var form_count = parseInt(form_count_str);
+  //grab empty form template and replace prefix of form with count
+  var template_html = $('#add-category-form-template').html();
+  var final_html = template_html.replace(/__prefix__/g, form_count_str);
+  //put html into place
+  $('#add-category-forms').append(final_html);
+  //update management form count
+  $('#id_form-TOTAL_FORMS').attr('value', form_count+1);
+  $(".Delete").hide();
+}
+
+</script>
+{% endblock %}

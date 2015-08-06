@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h3>Available Category Types</h3>
+    <a class="btn btn-primary" href="{% url 'create_category' %}">New</a><br><br>
+    {% for category in category_list %}
+    <div class="row">
+      <div class="col-md-12">
+        {{category.name}}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}
+

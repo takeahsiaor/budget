@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block headloaders %}
+<link rel="stylesheet" href="{% static 'recurrence/css/recurrence.css' %}">
+
+<script type="text/javascript" src="{% url 'django.views.i18n.javascript_catalog' %}"></script>
+<script src="{% static 'recurrence/js/recurrence.js' %}"></script>
+<script src="{% static 'recurrence/js/recurrence-widget.js' %}"></script>
+{% endblock %}
+{% block content %}
+
+<div class="row">
+  <div class="col-md-6">
+    <h3>Submit Recurring Transaction</h3>
+    {{form.non_field_errors}}
+    {% if messages %}
+      {% include 'messages.html' %}
+    {% endif %}
+    <form role="form" method="post">
+        {% csrf_token %}
+
+
+
+        {% for field in form %}
+
+          <div class="form-group">
+            <label for="{{field.id_for_label}}">{{field.label}}</label>
+            {% if field.label == 'Recurrences' %}
+            <div class="clearfix"></div>
+            {% endif %}
+            {% if field.errors %}
+              {% for error in field.errors %}
+                <div class="alert alert-danger">
+                  {{error}}
+                </div>
+              {% endfor %}
+            {% endif %}
+            {{field}}
+            {% if field.label == 'Recurrences' %}
+            <div class="clearfix"></div>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <input type="submit" class="btn btn-primary" value="Submit"/>
+    </form>
+  </div>
+
+
+</div>
+
+{% endblock %}

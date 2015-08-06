@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block headloaders %}
+<link href="{% static 'budget/DataTables-1.10.7/bootstrap/dataTables.bootstrap.css'%}" rel='stylesheet' type='text/css'>
+<link href="{% static 'budget/bootstrap-datepicker-1.4.0-dist/css/bootstrap-datepicker3.standalone.css' %}" rel='stylesheet' type='text/css'>
+<link href="{% static 'budget/bootstrap3-editable-1.5.1/bootstrap3-editable/css/bootstrap-editable.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+<div class="row">
+  <div class="col-md-12">
+    <h2>{{budget}}</h2>
+    <a class="btn-sm btn-primary" href="{% url 'edit_categories' budget.id %}">
+    Edit Categories
+    </a>
+  </div>
+</div>
+<hr>
+<div class="row">
+  <div class="col-md-6">
+    <h2>Submit Transaction</h2>
+    {{transaction_form.non_field_errors}}
+    <form role="form" method="post">
+        {% csrf_token %}
+        {% for field in transaction_form %}
+        <div class="form-group">
+          <label for="{{field.id_for_label}}">{{field.label}}</label>
+          {% if field.errors %}
+            {% for error in field.errors %}
+              <div class="alert alert-danger">
+                {{error}}
+              </div>
+            {% endfor %}
+          {% endif %}
+          {{field}}
+        </div>
+        {% endfor %}
+        <input type="submit" class="btn btn-primary" value="Submit"/>
+    </form>
+  </div>
+  <div class="col-md-6">  
+    <h2>Budget Categories</h2>
+    
+    {% include 'budget_limits.html' %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+  {% include 'transactions.html' %}
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+  {% include 'summary.html' %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block endloaders %}
+<script src="{% static 'budget/bootstrap-datepicker-1.4.0-dist/js/bootstrap-datepicker.js' %}"></script>
+<script src="{% static 'budget/bootstrap3-editable-1.5.1/bootstrap3-editable/js/bootstrap-editable.js' %}"></script>
+<script src="{% static 'budget/jquery-cookie/jquery.cookie.js' %}"></script>
+<script>
+$(document).ready(function(){
+  var csrftoken = $.cookie('csrftoken');
+
+  function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+  }
+  function sameOrigin(url) {
+      // test that a given url is a same-origin URL
+      // url could be relative or scheme relative or absolute
+      var host = document.location.host; // host + port
+      var protocol = document.location.protocol;
+      var sr_origin = '//' + host;
+      var origin = protocol + sr_origin;
+      // Allow absolute or scheme relative URLs to same origin
+      return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
+          (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
+          // or any other URL that isn't scheme relative or absolute i.e relative.
+          !(/^(\/\/|http:|https:).*/.test(url));
+  }
+  $.ajaxSetup({
+      beforeSend: function(xhr, settings) {
+          if (!csrfSafeMethod(settings.type) && sameOrigin(settings.url)) {
+              // Send the token to same-origin, relative URLs only.
+              // Send the token only if the method warrants CSRF protection
+              // Using the CSRFToken value acquired earlier
+              xhr.setRequestHeader("X-CSRFToken", csrftoken);
+          }
+      }
+  });
+
+  function updateSummary(){
+    var url = "{% url 'budget_summary' budget.id %}";
+    $.get(url, function(response){
+      $('#summary-total-expenses').html(response.total_expenses);
+      $('#summary-total-income').html(response.total_income);
+      $('#summary-net-income').html(response.net_income);
+      $('#summary-three-month-net').html(response.three_month_net)
+      $('#summary-best-category').html(response.best_category + ' (' + response.best_category_save_percent + '%)')
+      $('#summary-worst-category').html(response.worst_category + ' (' + response.worst_category_save_percent + '%)')
+    })
+  }
+
+  $('#budget-categories').dataTable(
+    {
+      'paging': false,
+      'searching': false
+    }
+  );
+  $('#income').dataTable(
+    {
+      columnDefs: [ {"orderable": false, "targets": -1}]
+    }
+  )
+  $('#expenses').dataTable(
+    {
+      columnDefs: [ {"orderable": false, "targets": -1}],
+      pageLength: 25
+    }
+  );
+  $('#id_date').datepicker({
+      format: 'yyyy-mm-dd',
+      autoclose: true,
+      defaultViewDate: {month:2, day:2, year:2015} 
+    });
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+  })
+
+  $('.delete-transaction').click(function(){
+    var transaction_id = $(this).data('transaction-id');
+    $("#transaction-" + transaction_id).fadeOut(600);
+    $.post("{% url 'delete_transaction' %}", {'transaction_id':transaction_id},function(){
+        //for now force refresh of page to update summary. maybe redo this later
+        //to only update summary section?
+        updateSummary();
+    })
+  })
+
+  $.fn.editable.defaults.mode = 'popup';
+  $('.editable').editable({
+      success: function(response, newValue) {
+        if(response.status == 'error') return response.msg;
+        updateSummary();
+      }
+  });
+})
+</script>
+{% endblock %}

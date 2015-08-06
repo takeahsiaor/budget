@@ -1,0 +1,60 @@
+{% if summary.income_transactions %}
+<h3>Income</h3>
+<table class="table display" id="income">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Category</th>
+      <th>Type</th>
+      <th>Amount</th>
+      <th>Recurring</th>
+      <th>Notes</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for income_item in summary.income_transactions %}
+    <tr id="transaction-{{income_item.id}}">
+      <td>{{income_item.date}}</td>
+      <td>{{income_item.category}}</td>
+      <td>{{income_item.transaction_type}}</td>
+      <td>$<a class="editable" href="#" data-type="text" data-pk="{{income_item.id}}" data-name="amount" data-url="{% url 'update_transaction' %}" data-title="Enter updated amount">{{income_item.amount}}</a></td>
+      <td>{% if income_item.recurring_transaction_def %}Yes{% else %}No{% endif %}</td>
+      <td><a class="editable" href="#" data-type="text" data-pk="{{income_item.id}}" data-name="notes" data-url="{% url 'update_transaction' %}" data-title="Enter updated notes">{% if income_item.notes %}{{income_item.notes}}{% else %}---{% endif %}</a></td>
+      <td><button type="button" class="close delete-transaction" data-transaction-id="{{income_item.id}}" aria-label="Close"><span aria-hidden="true">&times;</span></button></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<hr>
+{% endif %}
+{% if summary.expense_transactions %}
+<h3>Expenses</h3>
+<table class="table display" id="expenses">
+  <thead>
+    <tr>
+      <th>Date</th>
+      <th>Category</th>
+      <th>Type</th>
+      <th>Amount</th>
+      <th>Recurring</th>
+      <th>Notes</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for expense in summary.expense_transactions %}
+    <tr id="transaction-{{expense.id}}">
+      <td>{{expense.date}}</td>
+      <td>{{expense.category}}</td>
+      <td>{{expense.transaction_type}}</td>
+      <td>$<a class="editable" href="#" data-type="text" data-pk="{{expense.id}}" data-name="amount" data-url="{% url 'update_transaction' %}" data-title="Enter updated amount">{{expense.amount}}</a></td>
+      <td>{% if expense.recurring_transaction_def %}Yes{% else %}No{% endif %}</td>
+      <td><a class="editable" href="#" data-type="text" data-pk="{{expense.id}}" data-name="notes" data-url="{% url 'update_transaction' %}" data-title="Enter updated notes">{% if expense.notes %}{{expense.notes}}{% else %}---{% endif %}</a></td>
+      <td><button type="button" class="close delete-transaction" data-transaction-id="{{expense.id}}" aria-label="Close"><span aria-hidden="true">&times;</span></button></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<hr>
+{% endif %}

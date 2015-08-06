@@ -1,0 +1,70 @@
+<!-- DEPRECATED! -->
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block headloaders %}
+<!-- <link href="{% static 'budget/DataTables-1.10.7/media/css/jquery.dataTables.css'%}" rel='stylesheet' type='text/css'> -->
+<link href="{% static 'budget/DataTables-1.10.7/bootstrap/dataTables.bootstrap.css'%}" rel='stylesheet' type='text/css'>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+<div class="row">
+  <div class="col-md-6">
+    <h2>Submit Transaction</h2>
+    {{form.non_field_errors}}
+    <form role="form" method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label for="{{field.id_for_label}}">{{field.label}}</label>
+          {% if field.errors %}
+            {% for error in field.errors %}
+              <div class="alert alert-danger">
+                {{error}}
+              </div>
+            {% endfor %}
+          {% endif %}
+          {{field}}
+        </div>
+        {% endfor %}
+        <input type="submit" class="btn btn-primary" value="Submit"/>
+    </form>
+  </div>
+
+  <div class="col-md-6">
+    <h2>This Month's Budget</h2>
+    {% include 'budget_limits.html' %}
+  </div>
+
+</div>
+<hr>
+
+{% if summary.expense_transactions or summary.income_transactions %}
+<div class="row">
+    <div class="col-md-12">
+    <h2>Transactions this month</h2>
+    {% include 'transactions.html' %}
+    </div>
+</div>
+{% endif %}
+
+
+{% endblock %}
+
+{% block endloaders %}
+<script src="{% static 'budget/bootstrap-datepicker-1.4.0-dist/js/bootstrap-datepicker.js' %}"></script>
+<script>
+$(document).ready(function(){
+  $('#budget-categories').dataTable();
+  $('#income').dataTable();
+  $('#expenses').dataTable();
+
+  $('.datepicker').datepicker({format: 'mm/dd/yyyy'});
+
+})
+</script>
+{% endblock %}

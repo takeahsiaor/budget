@@ -1,0 +1,26 @@
+<table class="table display" id="budget-categories">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Total</th>
+      <th>Remaining</th>
+      <th>Spent</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for bc in summary.budget_categories %}
+    {% with left=bc.amount_left_in_category spent=bc.amount_spent_in_category %}
+    {% if left < 0 %}
+    <tr class="danger">
+    {% else %}
+    <tr class="success">
+    {% endif %}
+      <td>{{bc.category}}</td>
+      <td>${{bc.amount}}</td>
+      <td>${{left}}</td>
+      <td>${{spent}}</td>
+    </tr>
+    {% endwith %}
+  {% endfor %}
+  </tbody>
+</table>
