@@ -10,7 +10,6 @@ __pycache__/
 *.so
 
 #Local use
-media/
 *.psd
 
 # Distribution / packaging
