@@ -201,7 +201,9 @@ class RecurringTransactionFormView(FormView):
         if pk:
             recurring = RecurringTransactionDef.objects.filter(pk=pk)
             self.initial = recurring.values()[0]
-            self.initial.update({'category':recurring[0].category})#FIX THIS
+            #values off object give category_id not category so need
+            #to manually add in category key into initial.
+            self.initial.update({'category':recurring[0].category})
         return super(RecurringTransactionFormView, self).dispatch(
                 request, *args, **kwargs
             )
@@ -210,7 +212,6 @@ class RecurringTransactionFormView(FormView):
         pk = None
         if self.initial:
             pk = self.initial.get('id')
-        import ipdb; ipdb.set_trace()
         form.save(pk=pk)
         if pk:
             messages.success(self.request,
