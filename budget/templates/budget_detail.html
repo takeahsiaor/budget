@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load filters %}
 
 {% block headloaders %}
 <link href="{% static 'budget/DataTables-1.10.7/bootstrap/dataTables.bootstrap.css'%}" rel='stylesheet' type='text/css'>
@@ -36,7 +37,7 @@
               </div>
             {% endfor %}
           {% endif %}
-          {{field}}
+          {{field|tabindex:forloop.counter}}
         </div>
         {% endfor %}
         <input type="submit" class="btn btn-primary" value="Submit"/>
