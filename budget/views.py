@@ -285,7 +285,19 @@ class BudgetView(DetailView):
 
         #if looking at the current month, give today's date otherwise the first
         #of the month
-        if this_month == budget.month and this_year == budget.year:
+
+        #mimic last transaction inputted into given budget
+
+        last_transactions = Transaction.objects.filter(
+                budget=budget, recurring_transaction_def__isnull=True
+            ).order_by('-pk')
+        if last_transactions:
+            last = last_transactions[0]
+            transaction_form = TransactionForm(
+                initial={'date': last.date, 'category': last.category,
+                    'transaction_type': last.transaction_type})
+            
+        elif this_month == budget.month and this_year == budget.year:
             transaction_form = TransactionForm(
                     initial={'date':today.date()})
         else:
