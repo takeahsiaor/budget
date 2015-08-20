@@ -54,8 +54,11 @@ class RecurringTransactionDef(models.Model):
     def get_recurrences_between(self, start_date, end_date):
         '''input: date objects, output=list of dates that transactions 
         will be made'''
+        #bad hack here:
+        #between function does gt instead of gte
+        start_date = start_date - datetime.timedelta(days=1)
         start_date = datetime.datetime.combine(
-                start_date, datetime.datetime.min.time()
+                start_date, datetime.datetime.max.time()
             )
         end_date = datetime.datetime.combine(
                 end_date, datetime.datetime.max.time()
