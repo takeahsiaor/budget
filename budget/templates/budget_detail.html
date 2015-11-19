@@ -99,6 +99,26 @@ $(document).ready(function(){
       }
   });
 
+  function setup_editable(){
+    $('.delete-transaction').click(function(){
+      var transaction_id = $(this).data('transaction-id');
+      $("#transaction-" + transaction_id).fadeOut(600);
+      $.post("{% url 'delete_transaction' %}", {'transaction_id':transaction_id},function(){
+          //for now force refresh of page to update summary. maybe redo this later
+          //to only update summary section?
+          updateSummary();
+      })
+    })
+
+    $.fn.editable.defaults.mode = 'popup';
+    $('.editable').editable({
+        success: function(response, newValue) {
+          if(response.status == 'error') return response.msg;
+          updateSummary();
+        }
+    });
+  }
+
   function updateSummary(){
     var url = "{% url 'budget_summary' budget.id %}";
     $.get(url, function(response){
@@ -119,13 +139,15 @@ $(document).ready(function(){
   );
   $('#income').dataTable(
     {
-      columnDefs: [ {"orderable": false, "targets": -1}]
+      columnDefs: [ {"orderable": false, "targets": -1}],
+      drawCallback: setup_editable()
     }
   )
   $('#expenses').dataTable(
     {
       columnDefs: [ {"orderable": false, "targets": -1}],
-      pageLength: 25
+      pageLength: 25,
+      drawCallback: setup_editable()
     }
   );
   $('#id_date').datepicker({
@@ -137,23 +159,6 @@ $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip()
   })
 
-  $('.delete-transaction').click(function(){
-    var transaction_id = $(this).data('transaction-id');
-    $("#transaction-" + transaction_id).fadeOut(600);
-    $.post("{% url 'delete_transaction' %}", {'transaction_id':transaction_id},function(){
-        //for now force refresh of page to update summary. maybe redo this later
-        //to only update summary section?
-        updateSummary();
-    })
-  })
-
-  $.fn.editable.defaults.mode = 'popup';
-  $('.editable').editable({
-      success: function(response, newValue) {
-        if(response.status == 'error') return response.msg;
-        updateSummary();
-      }
-  });
 })
 </script>
 {% endblock %}
