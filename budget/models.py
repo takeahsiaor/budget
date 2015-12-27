@@ -155,7 +155,13 @@ class TransactionManager(models.Manager):
     def income_transactions(self, month, year):
         #should factor out this kind of "find month" pattern
         start_date = datetime.datetime(month=month, year=year, day=1)
-        end_date = start_date.replace(month=month+1)
+        if month == 12:
+            end_month = 1
+            end_year = year + 1
+        else:
+            end_month = month + 1
+            end_year = year
+        end_date = start_date.replace(month=end_month, year=end_year)
         transactions = Transaction.objects.filter(
                 date__gte=start_date, date__lt=end_date,
                 transaction_type='income'
@@ -165,7 +171,13 @@ class TransactionManager(models.Manager):
     def expense_transactions(self, month, year):
         #should factor out this kind of "find month" pattern
         start_date = datetime.datetime(month=month, year=year, day=1)
-        end_date = start_date.replace(month=month+1)
+        if month == 12:
+            end_month = 1
+            end_year = year + 1
+        else:
+            end_month = month + 1
+            end_year = year
+        end_date = start_date.replace(month=end_month, year=end_year)
         transactions = Transaction.objects.filter(
                 date__gte=start_date, date__lt=end_date,
                 transaction_type='expense'
@@ -361,6 +373,16 @@ class Budget(models.Model):
         return float(
             primary_budget_net + secondary_budget_net + tertiary_budget_net)
 
+    def get_yearly_net_income(self):
+        budgets_in_year = Budget.objects.filter(
+                year=self.year, start_date__lte=self.start_date)
+
+        yearly_net_income = 0.0
+        for budget in budgets_in_year:
+            yearly_net_income += budget.get_net_income()
+        return yearly_net_income
+
+
     def get_details(self):
         """
         wrapper function to get a bunch of information already exposed by 
@@ -380,19 +402,24 @@ class Budget(models.Model):
 
         net_income = self.get_net_income()
         three_month_net = self.get_three_month_net_income()
+        yearly_net = self.get_yearly_net_income()
         budget_categories = BudgetCategory.objects.filter(budget=self)
 
         worst_category, worst_category_save_percent = self.get_worst_category()
         best_category, best_category_save_percent = self.get_best_category()
 
-        return {'income_transactions':income, 'expense_transactions':expenses,
-            'total_income':total_income, 'total_expenses':total_expenses,
-            'net_income':net_income, 'budget_categories':budget_categories,
-            'three_month_net':three_month_net, 'worst_category':worst_category,
+        return {'income_transactions':income, 
+            'expense_transactions':expenses,
+            'total_income':total_income, 
+            'total_expenses':total_expenses,
+            'net_income':net_income, 
+            'budget_categories':budget_categories,
+            'three_month_net':three_month_net, 
+            'worst_category':worst_category,
             'worst_category_save_percent':worst_category_save_percent,
             'best_category_save_percent':best_category_save_percent,
             'best_category':best_category,
-
+            'year_net': yearly_net,
         }
 
     def save(self, **kwargs):
