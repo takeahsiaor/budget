@@ -44,6 +44,12 @@ urlpatterns = patterns('',
         name='category_types'),
     url(r'^categories/add/$', views.CategoryFormView.as_view(),
         name='create_category'),
+    url(r'^overview/$', views.OverviewView.as_view(), name='overview'),
+    url(r'^category-overview/(?P<pk>\d{1,8})/$', 
+        views.CategoryOverview.as_view(), name='category_overview'),
+    url(r'^transactions-in-budget-category/$',
+        views.get_transactions_for_budget_category, name='get_transactions_for_budget_category'),
+
 
 
 )

@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django_extensions',
     'recurrence',
     'budget',
+    # 'debug_toolbar'
 )
 
 MIDDLEWARE_CLASSES = (

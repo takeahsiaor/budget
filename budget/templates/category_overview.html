@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load filters %}
+
+{% block headloaders %}
+<link href="{% static 'budget/DataTables-1.10.7/bootstrap/dataTables.bootstrap.css'%}" rel='stylesheet' type='text/css'>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+<div class="row">
+  <div class="col-md-12">
+    <h2>Overview of {{category}}</h2>
+  </div>
+</div>
+<hr>
+
+<div class="row">
+  <div class="col-md-12">
+    <table class="table display" id="category-overview">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount Budgeted</th>
+          <th>Amount Spent</th>
+          <th>Amount Left</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bc in budget_categories %}
+            <tr class="bc-row" id="bc-row-{{bc.id}}">
+              <td>{{bc.date}}</td>
+              <td>${{bc.budgeted}}</td>
+              <td>${{bc.spent}}</td>
+              <td>${{bc.left}}</td>
+              <td><button class="btn btn-sm btn-default pull-right get-transactions" data-id={{bc.id}}>See Transactions</button></td>
+            </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<br>
+<hr>
+
+<div class="row">
+  <div class="col-md-12" id="graph-container">
+
+  </div>
+</div>
+
+<hr>
+<div id="transactions">
+
+</div>
+
+
+{% endblock %}
+
+{% block endloaders %}
+<script src="{% static 'budget/highcharts-custom.js' %}"></script>
+<script>
+$(document).ready(function(){
+ $('#graph-container').highcharts({
+    chart:{
+      type:'line'
+    },
+
+    title:{
+      text:'Overview of {{category}}'
+    },
+
+    yAxis:{
+      labels: {
+        formatter: function(){
+          return '$'+this.value;
+        }
+      },
+      title:{
+        text:'Amount'
+      }
+    },
+
+    xAxis:{
+      categories:{{date_data|safe}}
+    },
+
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle',
+        borderWidth: 0
+    },
+    tooltip: {
+        valuePrefix: '$'
+    },
+    series:[
+      {
+        name:'Amount Budgeted',
+        data:{{budgeted_data}}
+      },
+      {
+        name:'Amount Spent',
+        data:{{spent_data}}
+      }
+    ]
+  });
+
+  $('#category-overview').dataTable(
+    {
+      columnDefs: [ {"orderable": false, "targets": -1}],
+      pageLength: 25,
+    }
+  );
+
+  $('.get-transactions').click(function(){
+    var bc_id = $(this).data("id");
+    $(".bc-row").removeClass('success');
+    $("#bc-row-"+bc_id).addClass('success');
+
+    $("#transactions").empty();
+    $.get(
+      "{% url 'get_transactions_for_budget_category'%}", 
+      {'pk':bc_id}, 
+      function(response){
+        $('#transactions').html(response);
+        $('#transaction-table').dataTable(
+          {
+            pageLength: 25,
+          }
+        );
+        // $('html, body').animate({
+        //   scrollTop: $('#transaction-table').offset().top
+        // }, 500)
+    });
+  });
+})
+</script>
+{% endblock %}

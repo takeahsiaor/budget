@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load filters %}
+
+{% block headloaders %}
+<link href="{% static 'budget/DataTables-1.10.7/bootstrap/dataTables.bootstrap.css'%}" rel='stylesheet' type='text/css'>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+<div class="row">
+  <div class="col-md-12">
+    <h2>Overview of budgets</h2>
+  </div>
+</div>
+<hr>
+<div class="row">
+  <div class="col-md-12">
+    {% for category in categories %}
+      <a class="btn btn-primary" style='margin-bottom:5px' href="{% url 'category_overview' category.id%}">
+        {{category}}</a>
+    {% endfor %}
+  </div>
+</div>
+
+<hr>
+<div class="row">
+  <div class="col-md-12">
+    <table class="table display" id="overview-summary">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Total Spent</th>
+          <th>Total Earned</th>
+          <th>Monthly +/-</th>
+          <th>YTD +/-</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for budget in budgets %}
+          <tr id="budget-{{budget.id}}">
+            <td>{{budget.start_date}}</td>
+            <td>${{budget.total_expenses}}</td>
+            <td>${{budget.total_income}}</td>
+            <td>${{budget.net_income}}</td>
+            <td>${{budget.year_net}}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12" id="graph-container">
+
+  </div>
+</div>
+{% endblock %}
+
+{% block endloaders %}
+<script src="{% static 'budget/highcharts-custom.js' %}"></script>
+<script>
+$(document).ready(function(){
+
+  $('#graph-container').highcharts({
+    chart:{
+      type:'line'
+    },
+
+    title:{
+      text:'Overview of Budgets'
+    },
+
+    yAxis:{
+      labels: {
+        formatter: function(){
+          return '$'+this.value;
+        }
+      },
+      title:{
+        text:'Amount'
+      }
+    },
+
+    xAxis:{
+      categories:{{date_data|safe}}
+    },
+
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle',
+        borderWidth: 0
+    },
+    tooltip: {
+        valuePrefix: '$'
+    },
+    series:[
+      {
+        name:'Total Income',
+        data:{{income_data}}
+      },
+      {
+        name:'Total Expenses',
+        data:{{expense_data}}
+      },
+      {
+        name:'Net Income',
+        data:{{net_income_data}}
+      }
+    ]
+  });
+
+  $('#overview-summary').dataTable(
+    {
+      pageLength: 25,
+    }
+  );
+
+})
+</script>
+{% endblock %}

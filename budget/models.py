@@ -491,3 +491,17 @@ class BudgetCategory(models.Model):
     def __unicode__(self):
         return '%s for %s' % (self.category, self.budget)
 
+class Investment(models.Model):
+    name = models.CharField(max_length=255)
+    ticker_symbol = models.CharField(max_length=15)
+    description = models.CharField(max_length=255)
+
+    def __unicode__(self):
+        return '%s (%s)' % (self.name, self.ticker_symbol)
+
+class InvestmentDataPoint(models.Model):
+    date = models.DateTimeField(auto_now_add=True)
+    shares = models.DecimalField(decimal_places=2, max_digits=15)
+    price = models.DecimalField(decimal_places=2, max_digits=15)
+    value = models.DecimalField(decimal_places=2, max_digits=15)
+    investment = models.ForeignKey(Investment)

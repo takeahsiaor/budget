@@ -15,7 +15,7 @@
     {% else %}
     <tr class="success">
     {% endif %}
-      <td>{{bc.category}}</td>
+      <td><a href="{% url 'category_overview' bc.category.id %}">{{bc.category}}</a></td>
       <td>${{bc.amount}}</td>
       <td>${{left}}</td>
       <td>${{spent}}</td>

@@ -86,6 +86,90 @@ def get_budget_summary(request, pk):
     response_json = json.dumps(details)
     return HttpResponse(response_json, content_type="application/json")
 
+class OverviewView(TemplateView):
+    template_name = 'overview.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(OverviewView, self).get_context_data(*args, **kwargs)
+        budgets = Budget.objects.all()
+        budget_contexts = []
+        categories = Category.objects.all()
+        date_data = []
+        income_data = []
+        expense_data = []
+        net_income_data = []
+        for budget in budgets:
+            total_income = budget.get_total_income()
+            total_expenses = budget.get_total_expenses()
+            budget_contexts.append({
+                    'total_income':total_income,
+                    'total_expenses':total_expenses,
+                    'net_income':total_income - total_expenses,
+                    'three_month_net':budget.get_three_month_net_income(),
+                    'year_net':budget.get_yearly_net_income(),
+                    'start_date':budget.start_date
+                })
+            date_data.append(budget.start_date.strftime('%b %y'))
+            income_data.append(total_income)
+            expense_data.append(total_expenses)
+            net_income_data.append(round(total_income - total_expenses, 2))
+        context.update({
+            'budgets': budget_contexts,
+            'categories': categories,
+            'date_data': date_data,
+            'income_data': income_data,
+            'expense_data': expense_data,
+            'net_income_data': net_income_data})
+        return context
+
+class CategoryOverview(TemplateView):
+    template_name = 'category_overview.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(CategoryOverview, self).get_context_data(*args, **kwargs)
+        category_id = kwargs.get('pk')
+        if not category_id:
+            raise Http404
+        category = get_object_or_404(Category, id=category_id)
+        budget_categories = BudgetCategory.objects.filter(category=category)
+        bc_contexts = []
+        left_data = []
+        spent_data = []
+        date_data = []
+        budgeted_data = []
+        for bc in budget_categories:
+            left = bc.amount_left_in_category()
+            spent = bc.amount_spent_in_category()
+            bc_contexts.append({
+                    'left': left,
+                    'spent': spent,
+                    'date': bc.budget.start_date,
+                    'budgeted': bc.amount,
+                    'id': bc.id,
+                })
+            date_data.append(bc.budget.start_date.strftime('%b %y'))
+            spent_data.append(float(spent))
+            left_data.append(float(left))
+            budgeted_data.append(float(bc.amount))
+        context.update({
+                'budget_categories':bc_contexts,
+                'category':category,
+                'date_data':date_data,
+                'spent_data':spent_data,
+                'budgeted_data':budgeted_data
+            })
+        return context
+
+def get_transactions_for_budget_category(request):
+    pk = request.GET.get('pk')
+    if not pk:
+        raise Http404
+    bc = get_object_or_404(BudgetCategory, id=pk)
+    transactions = Transaction.objects.filter(
+        budget=bc.budget, category=bc.category)
+    return render(request, 'transactions_for_bc.html',
+        {'transactions':transactions, 'budget_category':bc})
+
 # Create your views here.
 class BudgetCategoryFormView(TemplateView):
     template_name = 'edit_budget_category_form.html'
