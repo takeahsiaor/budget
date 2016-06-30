@@ -8,6 +8,7 @@
       <th>Type</th>
       <th>Amount</th>
       <th>Recurring</th>
+      <th>Business</th>
       <th>Notes</th>
       <th></th>
     </tr>
@@ -20,6 +21,7 @@
       <td>{{income_item.transaction_type}}</td>
       <td>$<a class="editable" href="#" data-type="text" data-pk="{{income_item.id}}" data-name="amount" data-url="{% url 'update_transaction' %}" data-title="Enter updated amount">{{income_item.amount}}</a></td>
       <td>{% if income_item.recurring_transaction_def %}Yes{% else %}No{% endif %}</td>
+      <td>{% if income_item.for_business %}Yes{% else %}No{% endif %}</td>
       <td><a class="editable" href="#" data-type="text" data-pk="{{income_item.id}}" data-name="notes" data-url="{% url 'update_transaction' %}" data-title="Enter updated notes">{% if income_item.notes %}{{income_item.notes}}{% else %}---{% endif %}</a></td>
       <td><button type="button" class="close delete-transaction" data-transaction-id="{{income_item.id}}" aria-label="Close"><span aria-hidden="true">&times;</span></button></td>
     </tr>
@@ -38,6 +40,7 @@
       <th>Type</th>
       <th>Amount</th>
       <th>Recurring</th>
+      <th>Business</th>
       <th>Notes</th>
       <th></th>
     </tr>
@@ -50,6 +53,7 @@
       <td>{{expense.transaction_type}}</td>
       <td>$<a class="editable" href="#" data-type="text" data-pk="{{expense.id}}" data-name="amount" data-url="{% url 'update_transaction' %}" data-title="Enter updated amount">{{expense.amount}}</a></td>
       <td>{% if expense.recurring_transaction_def %}Yes{% else %}No{% endif %}</td>
+      <td>{% if expense.for_business %}Yes{% else %}No{% endif %}</td>
       <td><a class="editable" href="#" data-type="text" data-pk="{{expense.id}}" data-name="notes" data-url="{% url 'update_transaction' %}" data-title="Enter updated notes">{% if expense.notes %}{{expense.notes}}{% else %}---{% endif %}</a></td>
       <td><button type="button" class="close delete-transaction" data-transaction-id="{{expense.id}}" aria-label="Close"><span aria-hidden="true">&times;</span></button></td>
     </tr>

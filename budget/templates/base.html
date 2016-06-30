@@ -18,11 +18,17 @@
     <nav class="navbar navbar-default">
         <div class="container-fluid">
           <div class="navbar-header">
-              <a class="navbar-brand" href="#">Budget</a>
+              <a class="navbar-brand" href="{% url 'budgets' %}">Budget</a>
           </div>
           <div class="collapse navbar-collapse">
             <ul class='nav navbar-nav'>
-              <li><a href="{% url 'budgets' %}">Budgets</a></li>
+              <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Budgets <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                  <li><a  href="{% url 'current_budget' %}">Current Budget</a></li>
+                  <li><a href="{% url 'budgets' %}">All Budgets</a></li>
+                </ul>
+              </li>
               <li><a href="{% url 'overview' %}">Overview</a></li>
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Transactions <span class="caret"></span></a>

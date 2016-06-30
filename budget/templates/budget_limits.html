@@ -1,4 +1,7 @@
-<table class="table display" id="budget-categories">
+{% if summary.expense_budget_categories %}
+<hr>
+<h4>Expenses</h4>
+<table class="table display" id="expense-budget-categories">
   <thead>
     <tr>
       <th>Category</th>
@@ -8,7 +11,7 @@
     </tr>
   </thead>
   <tbody>
-  {% for bc in summary.budget_categories %}
+  {% for bc in summary.expense_budget_categories %}
     {% with left=bc.amount_left_in_category spent=bc.amount_spent_in_category %}
     {% if left < 0 %}
     <tr class="danger">
@@ -24,3 +27,35 @@
   {% endfor %}
   </tbody>
 </table>
+{% endif %}
+
+{% if summary.income_budget_categories %}
+<hr>
+<h4>Income</h4>
+<table class="table display" id="income-budget-categories">
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Total</th>
+      <th>Remaining</th>
+      <th>Earned</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for bc in summary.income_budget_categories %}
+    {% with left=bc.amount_left_in_category earned=bc.amount_earned_in_category %}
+    {% if left < 0 %}
+    <tr class="success">
+    {% else %}
+    <tr class="danger">
+    {% endif %}
+      <td><a href="{% url 'category_overview' bc.category.id %}">{{bc.category}}</a></td>
+      <td>${{bc.amount}}</td>
+      <td>${{left}}</td>
+      <td>${{earned}}</td>
+    </tr>
+    {% endwith %}
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}

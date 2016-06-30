@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.db.models import Sum
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.urlresolvers import reverse, reverse_lazy
 
 from django.views.generic import DetailView, ListView, TemplateView
@@ -107,7 +107,8 @@ class OverviewView(TemplateView):
                     'net_income':total_income - total_expenses,
                     'three_month_net':budget.get_three_month_net_income(),
                     'year_net':budget.get_yearly_net_income(),
-                    'start_date':budget.start_date
+                    'start_date':budget.start_date,
+                    'id':budget.id
                 })
             date_data.append(budget.start_date.strftime('%b %y'))
             income_data.append(total_income)
@@ -131,32 +132,65 @@ class CategoryOverview(TemplateView):
         if not category_id:
             raise Http404
         category = get_object_or_404(Category, id=category_id)
-        budget_categories = BudgetCategory.objects.filter(category=category)
-        bc_contexts = []
-        left_data = []
-        spent_data = []
-        date_data = []
-        budgeted_data = []
-        for bc in budget_categories:
+
+        # get all the expense budget categories and their context
+        expense_budget_categories = BudgetCategory.objects.filter(
+            category=category, income=False)
+        expense_bc_contexts = []
+        #expense_left_data = []
+        expense_spent_data = []
+        expense_date_data = []
+        expense_budgeted_data = []
+        for bc in expense_budget_categories:
             left = bc.amount_left_in_category()
             spent = bc.amount_spent_in_category()
-            bc_contexts.append({
+            expense_bc_contexts.append({
                     'left': left,
                     'spent': spent,
                     'date': bc.budget.start_date,
                     'budgeted': bc.amount,
                     'id': bc.id,
+                    'budget_id':bc.budget.id
                 })
-            date_data.append(bc.budget.start_date.strftime('%b %y'))
-            spent_data.append(float(spent))
-            left_data.append(float(left))
-            budgeted_data.append(float(bc.amount))
+            expense_date_data.append(bc.budget.start_date.strftime('%b %y'))
+            expense_spent_data.append(float(spent))
+            #expense_left_data.append(float(left))
+            expense_budgeted_data.append(float(bc.amount))
+
+        #get the income budget categories and their context
+        income_budget_categories = BudgetCategory.objects.filter(
+            category=category, income=True)
+        income_bc_contexts = []
+        #income_left_data = []
+        income_earned_data = []
+        income_date_data = []
+        income_budgeted_data = []
+        for bc in income_budget_categories:
+            left = bc.amount_left_in_category()
+            earned = bc.amount_earned_in_category()
+            income_bc_contexts.append({
+                    'left': left,
+                    'earned': earned,
+                    'date': bc.budget.start_date,
+                    'budgeted': bc.amount,
+                    'id': bc.id,
+                    'budget_id':bc.budget.id
+                })
+            income_date_data.append(bc.budget.start_date.strftime('%b %y'))
+            income_earned_data.append(float(earned))
+            #income_left_data.append(float(left))
+            income_budgeted_data.append(float(bc.amount)) 
+
         context.update({
-                'budget_categories':bc_contexts,
                 'category':category,
-                'date_data':date_data,
-                'spent_data':spent_data,
-                'budgeted_data':budgeted_data
+                'expense_budget_categories':expense_bc_contexts,
+                'expense_date_data':expense_date_data,
+                'expense_spent_data':expense_spent_data,
+                'expense_budgeted_data':expense_budgeted_data,
+                'income_budget_categories':income_bc_contexts,
+                'income_date_data':income_date_data,
+                'income_earned_data':income_earned_data,
+                'income_budgeted_data':income_budgeted_data,
             })
         return context
 
@@ -169,6 +203,16 @@ def get_transactions_for_budget_category(request):
         budget=bc.budget, category=bc.category)
     return render(request, 'transactions_for_bc.html',
         {'transactions':transactions, 'budget_category':bc})
+
+def get_transactions_for_budget(request):
+    pk = request.GET.get('pk')
+    if not pk:
+        raise Http404
+    budget = get_object_or_404(Budget, id=pk)
+    transactions = Transaction.objects.filter(
+        budget=budget)
+    return render(request, 'transactions_for_budget.html',
+        {'transactions':transactions, 'budget':budget})
 
 # Create your views here.
 class BudgetCategoryFormView(TemplateView):
@@ -189,7 +233,7 @@ class BudgetCategoryFormView(TemplateView):
         values_list = []
         for bc in budget_categories:
             values_list.append({'budget':bc.budget, 'amount':bc.amount, 
-                'category':bc.category})
+                'category':bc.category, 'income':bc.income})
 
         context = super(BudgetCategoryFormView, self).get_context_data(
             *args, **kwargs)
@@ -204,6 +248,7 @@ class BudgetCategoryFormView(TemplateView):
         if category_formset.is_valid():
             for form in category_formset:
                 if form.has_changed():
+
                     form.save(self.budget)
 
             messages.success(request, 
@@ -245,7 +290,8 @@ class CreateBudgetFormView(CreateView):
             new_bc = BudgetCategory(
                     budget=self.object,
                     category=bc.category,
-                    amount=bc.amount
+                    amount=bc.amount,
+                    income=bc.income
                 )
             new_bc.save()
         if budget_to_clone_pk:
@@ -354,6 +400,13 @@ class BudgetListView(ListView):
     #     context = super(BudgetListView, self).get_context_data(*args, **kwargs)
     #     budget_list = s
 
+def current_budget(request):
+    today = datetime.datetime.today()
+    month = today.month
+    year = today.year
+
+    budget = get_object_or_404(Budget, month=month, year=year)
+    return redirect(reverse_lazy('budget', kwargs={'pk':budget.pk}))
 
 class BudgetView(DetailView):
     model = Budget

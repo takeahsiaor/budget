@@ -55,7 +55,7 @@ class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ['date', 'transaction_type', 'category',
-            'amount', 'notes']
+            'amount', 'notes', 'for_business']
 
         widgets = {
                 'date': forms.DateInput(attrs={'class':'form-control'}),
@@ -66,8 +66,13 @@ class TransactionForm(forms.ModelForm):
                     'placeholder':'$0.00'}),
                 'notes': forms.TextInput(attrs={
                     'class':'form-control', 
-                    'placeholder':'Enter details of transaction'})
+                    'placeholder':'Enter details of transaction'}),
+                'for_business': forms.CheckboxInput()
             }
+
+        labels = {
+            'for_business': 'Business related transaction?'
+        }
     def save(self):
         '''
         manually sets the budget this is associated with based on the 
@@ -102,18 +107,19 @@ class BudgetCategoryForm(forms.ModelForm):
     class Meta:
         model = BudgetCategory
         exclude = ['budget']
-
+        fields = ['category', 'amount', 'income']
         widgets = {
                 'category': forms.Select(attrs={'class':'form-control'}),
                 'amount': forms.NumberInput(attrs={
                     'class':'form-control',
                     'placeholder':'$0.00'}),
+                'income': forms.CheckboxInput(),
             }
 
     def save(self, budget):
         category = self.cleaned_data['category']
         amount = self.cleaned_data['amount']
-        
+        income = self.cleaned_data['income']
         #Use a get on cleaned_data in case not used with a formset with
         #can_delete = False
         delete = self.cleaned_data.get('DELETE')
@@ -127,7 +133,7 @@ class BudgetCategoryForm(forms.ModelForm):
             return
 
         budget_category, created = BudgetCategory.objects.update_or_create(
-                budget=budget, category=category, 
+                budget=budget, category=category, income=income,
                 defaults={'amount':amount}
             )
 

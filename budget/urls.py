@@ -31,6 +31,7 @@ urlpatterns = patterns('',
     url(r'^budgets/$', views.BudgetListView.as_view(), name='budgets'),
     url(r'^budgets/(?P<pk>\d{1,8})/$', views.BudgetView.as_view(),
         name='budget'),
+    url(r'^budgets/current-budget/$', views.current_budget, name="current_budget"),
     url(r'^budgets/new/$', views.CreateBudgetFormView.as_view(), name='create_budget'),
     url(r'^budgets/(?P<pk>\d{1,8})/edit-categories/$',
         views.BudgetCategoryFormView.as_view(), name='edit_categories'),
@@ -49,7 +50,8 @@ urlpatterns = patterns('',
         views.CategoryOverview.as_view(), name='category_overview'),
     url(r'^transactions-in-budget-category/$',
         views.get_transactions_for_budget_category, name='get_transactions_for_budget_category'),
-
+    url(r'^transactions-in-budget/$',
+        views.get_transactions_for_budget, name='get_transactions_for_budget'),
 
 
 )

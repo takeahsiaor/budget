@@ -17,9 +17,11 @@
 </div>
 <hr>
 
+{% if expense_budget_categories %}
 <div class="row">
   <div class="col-md-12">
-    <table class="table display" id="category-overview">
+    <h3>Expense category</h3>
+    <table class="table display" id="expense_category-overview">
       <thead>
         <tr>
           <th>Date</th>
@@ -27,16 +29,19 @@
           <th>Amount Spent</th>
           <th>Amount Left</th>
           <th></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
-        {% for bc in budget_categories %}
+        {% for bc in expense_budget_categories %}
             <tr class="bc-row" id="bc-row-{{bc.id}}">
               <td>{{bc.date}}</td>
               <td>${{bc.budgeted}}</td>
               <td>${{bc.spent}}</td>
               <td>${{bc.left}}</td>
               <td><button class="btn btn-sm btn-default pull-right get-transactions" data-id={{bc.id}}>See Transactions</button></td>
+              <td><a href="{% url 'budget' bc.budget_id %}" class="btn btn-sm btn-default">
+                Budget</a></td>
             </tr>
         {% endfor %}
       </tbody>
@@ -47,11 +52,52 @@
 <hr>
 
 <div class="row">
-  <div class="col-md-12" id="graph-container">
+  <div class="col-md-12" id="expense_graph-container">
 
   </div>
 </div>
+{% endif %}
 
+{% if income_budget_categories %}
+<div class="row">
+  <div class="col-md-12">
+    <h3>Income category</h3>
+    <table class="table display" id="income_category-overview">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount Budgeted</th>
+          <th>Amount Earned</th>
+          <th>Amount Left</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bc in income_budget_categories %}
+            <tr class="bc-row" id="bc-row-{{bc.id}}">
+              <td>{{bc.date}}</td>
+              <td>${{bc.budgeted}}</td>
+              <td>${{bc.earned}}</td>
+              <td>${{bc.left}}</td>
+              <td><button class="btn btn-sm btn-default pull-right get-transactions" data-id={{bc.id}}>See Transactions</button></td>
+              <td><a href="{% url 'budget' bc.budget_id %}" class="btn btn-sm btn-default">
+                Budget</a></td>
+            </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<br>
+<hr>
+
+<div class="row">
+  <div class="col-md-12" id="income_graph-container">
+
+  </div>
+</div>
+{% endif %}
 <hr>
 <div id="transactions">
 
@@ -64,57 +110,113 @@
 <script src="{% static 'budget/highcharts-custom.js' %}"></script>
 <script>
 $(document).ready(function(){
- $('#graph-container').highcharts({
-    chart:{
-      type:'line'
-    },
+  {% if expense_budget_categories %}
+   //expenses
+   $('#expense_graph-container').highcharts({
+      chart:{
+        type:'line'
+      },
 
-    title:{
-      text:'Overview of {{category}}'
-    },
+      title:{
+        text:'Overview of {{category}} (Expense)'
+      },
 
-    yAxis:{
-      labels: {
-        formatter: function(){
-          return '$'+this.value;
+      yAxis:{
+        labels: {
+          formatter: function(){
+            return '$'+this.value;
+          }
+        },
+        title:{
+          text:'Amount'
         }
       },
-      title:{
-        text:'Amount'
-      }
-    },
 
-    xAxis:{
-      categories:{{date_data|safe}}
-    },
-
-    legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'middle',
-        borderWidth: 0
-    },
-    tooltip: {
-        valuePrefix: '$'
-    },
-    series:[
-      {
-        name:'Amount Budgeted',
-        data:{{budgeted_data}}
+      xAxis:{
+        categories:{{expense_date_data|safe}}
       },
-      {
-        name:'Amount Spent',
-        data:{{spent_data}}
-      }
-    ]
-  });
 
-  $('#category-overview').dataTable(
-    {
-      columnDefs: [ {"orderable": false, "targets": -1}],
-      pageLength: 25,
-    }
-  );
+      legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'middle',
+          borderWidth: 0
+      },
+      tooltip: {
+          valuePrefix: '$'
+      },
+      series:[
+        {
+          name:'Amount Budgeted',
+          data:{{expense_budgeted_data}}
+        },
+        {
+          name:'Amount Spent',
+          data:{{expense_spent_data}}
+        }
+      ]
+    });
+
+    $('#expense_category-overview').dataTable(
+      {
+        columnDefs: [ {"orderable": false, "targets": [-1,-2]}],
+        pageLength: 25,
+      }
+    );
+    {% endif %}
+
+    {% if income_budget_categories %}
+        //income
+       $('#income_graph-container').highcharts({
+          chart:{
+            type:'line'
+          },
+
+          title:{
+            text:'Overview of {{category}} (Income)'
+          },
+
+          yAxis:{
+            labels: {
+              formatter: function(){
+                return '$'+this.value;
+              }
+            },
+            title:{
+              text:'Amount'
+            }
+          },
+
+          xAxis:{
+            categories:{{income_date_data|safe}}
+          },
+
+          legend: {
+              layout: 'vertical',
+              align: 'right',
+              verticalAlign: 'middle',
+              borderWidth: 0
+          },
+          tooltip: {
+              valuePrefix: '$'
+          },
+          series:[
+            {
+              name:'Amount Earned',
+              data:{{income_earned_data}}
+            }
+          ]
+        });
+
+        $('#income_category-overview').dataTable(
+          {
+            columnDefs: [ {"orderable": false, "targets": [-1,-2]}],
+            pageLength: 25,
+          }
+        );
+    {% endif %}
+
+
 
   $('.get-transactions').click(function(){
     var bc_id = $(this).data("id");
@@ -132,9 +234,9 @@ $(document).ready(function(){
             pageLength: 25,
           }
         );
-        // $('html, body').animate({
-        //   scrollTop: $('#transaction-table').offset().top
-        // }, 500)
+        $('html, body').animate({
+          scrollTop: $('#transaction-table').offset().top
+        }, 500)
     });
   });
 })

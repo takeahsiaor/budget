@@ -35,17 +35,24 @@
           <th>Total Spent</th>
           <th>Total Earned</th>
           <th>Monthly +/-</th>
+          <th>Three Month +/-</th>
           <th>YTD +/-</th>
+          <th></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         {% for budget in budgets %}
-          <tr id="budget-{{budget.id}}">
+          <tr class="budget-row" id="budget-row-{{budget.id}}">
             <td>{{budget.start_date}}</td>
             <td>${{budget.total_expenses}}</td>
             <td>${{budget.total_income}}</td>
             <td>${{budget.net_income}}</td>
+            <td>${{budget.three_month_net}}</td>
             <td>${{budget.year_net}}</td>
+            <td><button class="btn btn-sm btn-default pull-right get-transactions" data-id={{budget.id}}>See Transactions</button></td>
+            <td><a href="{% url 'budget' budget.id %}" class="btn btn-sm btn-default">
+                Budget</a></td>
           </tr>
         {% endfor %}
       </tbody>
@@ -57,6 +64,13 @@
 
   </div>
 </div>
+
+
+<hr>
+<div id="transactions">
+
+</div>
+
 {% endblock %}
 
 {% block endloaders %}
@@ -115,9 +129,32 @@ $(document).ready(function(){
 
   $('#overview-summary').dataTable(
     {
-      pageLength: 25,
+        columnDefs: [ {"orderable": false, "targets": [-1,-2]}],
+        pageLength: 25,
     }
   );
+
+  $('.get-transactions').click(function(){
+    var budget_id = $(this).data("id");
+    $(".budget-row").removeClass('success');
+    $("#budget-row-"+budget_id).addClass('success');
+
+    $("#transactions").empty();
+    $.get(
+      "{% url 'get_transactions_for_budget'%}", 
+      {'pk':budget_id}, 
+      function(response){
+        $('#transactions').html(response);
+        $('#transaction-table').dataTable(
+          {
+            pageLength: 25,
+          }
+        );
+        $('html, body').animate({
+          scrollTop: $('#transaction-table').offset().top
+        }, 500)
+    });
+  });
 
 })
 </script>

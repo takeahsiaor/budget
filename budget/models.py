@@ -194,6 +194,7 @@ class Transaction(models.Model):
     budget = models.ForeignKey('Budget')
     amount = models.DecimalField(decimal_places=2, max_digits=15)
     notes = models.CharField(max_length=1023, blank=True, null=True)
+    for_business = models.BooleanField(default=False)
 
     recurring_transaction_def = models.ForeignKey(
             RecurringTransactionDef, blank=True, null=True
@@ -308,7 +309,8 @@ class Budget(models.Model):
 
         measured by percent saved
         """
-        budget_categories = BudgetCategory.objects.filter(budget=self)
+        budget_categories = BudgetCategory.objects.filter(
+            budget=self, income=False)
         worst_category_percent = 100
         worst_category = None
         worst_category_name = "None"
@@ -329,7 +331,8 @@ class Budget(models.Model):
         return (worst_category_name, percent_display)
 
     def get_best_category(self):
-        budget_categories = BudgetCategory.objects.filter(budget=self)
+        budget_categories = BudgetCategory.objects.filter(
+            budget=self, income=False)
         best_category_percent = -1000
         best_category = None
         best_category_name = "None"
@@ -403,22 +406,26 @@ class Budget(models.Model):
         net_income = self.get_net_income()
         three_month_net = self.get_three_month_net_income()
         yearly_net = self.get_yearly_net_income()
-        budget_categories = BudgetCategory.objects.filter(budget=self)
+        expense_budget_categories = BudgetCategory.objects.filter(
+            budget=self, income=False)
+        income_budget_categories = BudgetCategory.objects.filter(
+            budget=self, income=True)
 
-        worst_category, worst_category_save_percent = self.get_worst_category()
-        best_category, best_category_save_percent = self.get_best_category()
+        # worst_category, worst_category_save_percent = self.get_worst_category()
+        # best_category, best_category_save_percent = self.get_best_category()
 
         return {'income_transactions':income, 
             'expense_transactions':expenses,
             'total_income':total_income, 
             'total_expenses':total_expenses,
             'net_income':net_income, 
-            'budget_categories':budget_categories,
+            'expense_budget_categories':expense_budget_categories,
+            'income_budget_categories':income_budget_categories,
             'three_month_net':three_month_net, 
-            'worst_category':worst_category,
-            'worst_category_save_percent':worst_category_save_percent,
-            'best_category_save_percent':best_category_save_percent,
-            'best_category':best_category,
+            # 'worst_category':worst_category,
+            # 'worst_category_save_percent':worst_category_save_percent,
+            # 'best_category_save_percent':best_category_save_percent,
+            # 'best_category':best_category,
             'year_net': yearly_net,
         }
 
@@ -459,6 +466,8 @@ class BudgetCategory(models.Model):
 
     budget = models.ForeignKey('Budget')
     category = models.ForeignKey('Category')
+    #indicates whether it's primarily an expense category or an income category
+    income = models.BooleanField(default=False)
     amount = models.DecimalField(decimal_places=2, max_digits=15)
 
     def parse_budget_category(self):
@@ -480,28 +489,45 @@ class BudgetCategory(models.Model):
     def amount_left_in_category(self):
         total = self.amount
         expenses, income = self.parse_budget_category()
-        left = total + income - expenses
+        if not self.income:
+            left = total + income - expenses
+        else:
+            #opposite expenses. Left for income category is how much income
+            #still needs to be made up
+            left = total + expenses - income
         return left
 
     def amount_spent_in_category(self):
-        expenses, income = self.parse_budget_category()
-        spent = expenses - income
-        return spent
+        #only applicable to expense categories
+        if not self.income:
+            expenses, income = self.parse_budget_category()
+            spent = expenses - income
+            return spent
+        return None
+
+    def amount_earned_in_category(self):
+        #only applicable to income categories
+        if self.income:
+            expenses, income = self.parse_budget_category()
+            earned = income - expenses
+            return earned
+        return None
 
     def __unicode__(self):
-        return '%s for %s' % (self.category, self.budget)
+        type_of = '(income)' if self.income else '(expense)'
+        return '%s %s for %s' % (self.category, type_of, self.budget)
 
-class Investment(models.Model):
-    name = models.CharField(max_length=255)
-    ticker_symbol = models.CharField(max_length=15)
-    description = models.CharField(max_length=255)
+# class Investment(models.Model):
+#     name = models.CharField(max_length=255)
+#     ticker_symbol = models.CharField(max_length=15)
+#     description = models.CharField(max_length=255)
 
-    def __unicode__(self):
-        return '%s (%s)' % (self.name, self.ticker_symbol)
+#     def __unicode__(self):
+#         return '%s (%s)' % (self.name, self.ticker_symbol)
 
-class InvestmentDataPoint(models.Model):
-    date = models.DateTimeField(auto_now_add=True)
-    shares = models.DecimalField(decimal_places=2, max_digits=15)
-    price = models.DecimalField(decimal_places=2, max_digits=15)
-    value = models.DecimalField(decimal_places=2, max_digits=15)
-    investment = models.ForeignKey(Investment)
+# class InvestmentDataPoint(models.Model):
+#     date = models.DateTimeField(auto_now_add=True)
+#     shares = models.DecimalField(decimal_places=2, max_digits=15)
+#     price = models.DecimalField(decimal_places=2, max_digits=15)
+#     value = models.DecimalField(decimal_places=2, max_digits=15)
+#     investment = models.ForeignKey(Investment)
