@@ -35,7 +35,7 @@
       <tbody>
         {% for bc in expense_budget_categories %}
             <tr class="bc-row" id="bc-row-{{bc.id}}">
-              <td>{{bc.date}}</td>
+              <td>{{bc.date|date:'M, Y'}}</td>
               <td>${{bc.budgeted}}</td>
               <td>${{bc.spent}}</td>
               <td>${{bc.left}}</td>

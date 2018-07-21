@@ -14,7 +14,7 @@ class TransactionAdmin(admin.ModelAdmin):
     ordering = ('-date',)
 
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'notes')
+    list_display = ('name', 'notes', 'status')
     ordering = ('name',)
 
 class BudgetAdmin(admin.ModelAdmin):

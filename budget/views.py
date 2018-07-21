@@ -67,6 +67,12 @@ def update_transaction(request):
     field = request.POST.get('name')
     value = request.POST.get('value')
 
+    if field == 'for_business':
+        if value.strip().lower() in ('yes', 'y'):
+            value = True
+        else:
+            value = False
+
     setattr(transaction, field, value)
     try:
         # transaction.clean()
@@ -82,7 +88,8 @@ def get_budget_summary(request, pk):
     details = budget.get_details()
     del details['income_transactions']
     del details['expense_transactions']
-    del details['budget_categories']
+    del details['expense_budget_categories']
+    del details['income_budget_categories']
     response_json = json.dumps(details)
     return HttpResponse(response_json, content_type="application/json")
 
@@ -91,7 +98,8 @@ class OverviewView(TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super(OverviewView, self).get_context_data(*args, **kwargs)
-        budgets = Budget.objects.all()
+        current_year = datetime.datetime.now().year
+        budgets = Budget.objects.filter(year__in=(current_year, current_year-1))
         budget_contexts = []
         categories = Category.objects.all()
         date_data = []
@@ -121,6 +129,40 @@ class OverviewView(TemplateView):
             'income_data': income_data,
             'expense_data': expense_data,
             'net_income_data': net_income_data})
+        return context
+
+class BusinessExpenseOverview(TemplateView):
+    template_name = 'business_overview.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(BusinessExpenseOverview, self).get_context_data(
+            *args, **kwargs
+        )
+        budgets = Budget.objects.all()
+        budget_contexts = []
+        expense_spent_data = []
+        expense_date_data = []
+        for budget in budgets:
+            business_expenses = Transaction.objects.filter(
+                transaction_type='expense',
+                budget=budget,
+                for_business=True
+            )
+            total = business_expenses.aggregate(Sum('amount'))['amount__sum'] or 0
+            budget_contexts.append({
+                'total': business_expenses.aggregate(
+                    Sum('amount')
+                )['amount__sum'] or 0,
+                'id': budget.pk,
+                'date': budget.start_date,
+            })
+            expense_date_data.append(budget.start_date.strftime('%b %y'))
+            expense_spent_data.append(float(total))
+        context.update({
+            'business_totals': budget_contexts,
+            'expense_date_data': expense_date_data,
+            'expense_spent_data': expense_spent_data    
+        })
         return context
 
 class CategoryOverview(TemplateView):
@@ -193,6 +235,16 @@ class CategoryOverview(TemplateView):
                 'income_budgeted_data':income_budgeted_data,
             })
         return context
+
+def get_business_expense_transactions(request):
+    pk = request.GET.get('pk')
+    if not pk:
+        raise Http404
+    budget = get_object_or_404(Budget, id=pk)
+    transactions = Transaction.objects.filter(
+        budget=budget, for_business=True, transaction_type='expense')
+    return render(request, 'business_transactions.html',
+        {'transactions':transactions, 'budget':budget})
 
 def get_transactions_for_budget_category(request):
     pk = request.GET.get('pk')
@@ -440,7 +492,6 @@ class BudgetView(DetailView):
         else:
             transaction_form = TransactionForm(
                     initial={'date':budget.start_date})
-
         context.update({
                 'summary': budget.get_details(),
                 'transaction_form': transaction_form 
@@ -455,9 +506,10 @@ class BudgetView(DetailView):
             #at this point in the method call chain, self.object does not exist
             #so use self.get_object() instead
             messages.success(request,
-                "You've succesfully added a tranaction to %s!" % \
+                "You've succesfully added a transaction to %s!" % \
                 self.get_object())
-            return super(BudgetView, self).get(request, *args, **kwargs)
+            redirect_to = reverse('budget', args=args, kwargs=kwargs)
+            return HttpResponseRedirect(redirect_to)
 
         context = self.get_context_data(*args, **kwargs)
         context.update({'transaction_form': transaction_form})

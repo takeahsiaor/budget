@@ -51,7 +51,6 @@ class RecurringTransactionForm(forms.ModelForm):
     
 
 class TransactionForm(forms.ModelForm):
-
     class Meta:
         model = Transaction
         fields = ['date', 'transaction_type', 'category',
@@ -73,12 +72,16 @@ class TransactionForm(forms.ModelForm):
         labels = {
             'for_business': 'Business related transaction?'
         }
+
+    def __init__(self, *args, **kwargs):
+        super(TransactionForm, self).__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(status=True)
+
     def save(self):
         '''
         manually sets the budget this is associated with based on the 
         input date
         '''
-
         cd = self.cleaned_data
         date = cd['date']
         month = date.month
@@ -86,10 +89,11 @@ class TransactionForm(forms.ModelForm):
         budget, created = Budget.objects.get_or_create(month=month, year=year)
         transaction = Transaction(date=date, transaction_type=cd['transaction_type'],
             category=cd['category'], amount=cd['amount'], notes=cd['notes'],
-            budget=budget)
+            budget=budget, for_business=cd['for_business'])
         transaction.save()
         return transaction
-        
+
+
 class BudgetForm(forms.ModelForm):
     class Meta:
         model = Budget

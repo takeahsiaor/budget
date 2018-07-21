@@ -53,7 +53,7 @@
       <td>{{expense.transaction_type}}</td>
       <td>$<a class="editable" href="#" data-type="text" data-pk="{{expense.id}}" data-name="amount" data-url="{% url 'update_transaction' %}" data-title="Enter updated amount">{{expense.amount}}</a></td>
       <td>{% if expense.recurring_transaction_def %}Yes{% else %}No{% endif %}</td>
-      <td>{% if expense.for_business %}Yes{% else %}No{% endif %}</td>
+      <td><a class="editable" href="#" data-type="text" data-pk="{{expense.id}}" data-name="for_business" data-url="{% url 'update_transaction' %}" data-title="Enter updated value">{% if expense.for_business %}Yes{% else %}No{% endif %}<a></td>
       <td><a class="editable" href="#" data-type="text" data-pk="{{expense.id}}" data-name="notes" data-url="{% url 'update_transaction' %}" data-title="Enter updated notes">{% if expense.notes %}{{expense.notes}}{% else %}---{% endif %}</a></td>
       <td><button type="button" class="close delete-transaction" data-transaction-id="{{expense.id}}" aria-label="Close"><span aria-hidden="true">&times;</span></button></td>
     </tr>
