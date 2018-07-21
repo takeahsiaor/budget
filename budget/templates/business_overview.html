@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load filters %}
+
+{% block headloaders %}
+<link href="{% static 'budget/DataTables-1.10.7/bootstrap/dataTables.bootstrap.css'%}" rel='stylesheet' type='text/css'>
+{% endblock %}
+
+{% block content %}
+{% if messages %}
+  {% include 'messages.html' %}
+{% endif %}
+<div class="row">
+  <div class="col-md-12">
+    <h2>Business Expense Overview</h2>
+  </div>
+</div>
+<hr>
+
+{% if business_totals %}
+<div class="row">
+  <div class="col-md-12">
+    <h3>Business Expenses</h3>
+    <table class="table display" id="business_expense-overview">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount Spent</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bt in business_totals %}
+            <tr class="budget-row" id="budget-row-{{bt.id}}">
+              <td>{{bt.date|date:'M, Y'}}</td>
+              <td>${{bt.total}}</td>
+              <td><button class="btn btn-sm btn-default pull-right get-transactions" data-id={{bt.id}}>See Transactions</button></td>
+              <td><a href="{% url 'budget' bt.id %}" class="btn btn-sm btn-default">
+                Budget</a></td>
+            </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<br>
+<hr>
+
+<div class="row">
+  <div class="col-md-12" id="expense_graph-container">
+
+  </div>
+</div>
+{% endif %}
+
+<hr>
+<div id="transactions">
+
+</div>
+
+
+{% endblock %}
+
+{% block endloaders %}
+<script src="{% static 'budget/highcharts-custom.js' %}"></script>
+<script>
+$(document).ready(function(){
+  {% if business_totals %}
+   //expenses
+   $('#expense_graph-container').highcharts({
+      chart:{
+        type:'line'
+      },
+
+      title:{
+        text:'Overview of Business Expenses'
+      },
+
+      yAxis:{
+        labels: {
+          formatter: function(){
+            return '$'+this.value;
+          }
+        },
+        title:{
+          text:'Amount'
+        }
+      },
+
+      xAxis:{
+        categories:{{expense_date_data|safe}}
+      },
+
+      legend: {
+          layout: 'vertical',
+          align: 'right',
+          verticalAlign: 'middle',
+          borderWidth: 0
+      },
+      tooltip: {
+          valuePrefix: '$'
+      },
+      series:[
+        {
+          name:'Amount Spent',
+          data:{{expense_spent_data}}
+        }
+      ]
+    });
+
+    $('#expense_category-overview').dataTable(
+      {
+        columnDefs: [ {"orderable": false, "targets": [-1,-2]}],
+        pageLength: 25,
+      }
+    );
+    {% endif %}
+
+
+  $('.get-transactions').click(function(){
+    var budget_id = $(this).data("id");
+    $(".budget-row").removeClass('success');
+    $("#budget-row-"+budget_id).addClass('success');
+
+    $("#transactions").empty();
+    $.get(
+      "{% url 'get_business_transactions'%}", 
+      {'pk':budget_id}, 
+      function(response){
+        $('#transactions').html(response);
+        $('#transaction-table').dataTable(
+          {
+            pageLength: 25,
+          }
+        );
+        $('html, body').animate({
+          scrollTop: $('#transaction-table').offset().top
+        }, 500)
+    });
+  });
+})
+</script>
+{% endblock %}

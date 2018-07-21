@@ -1,0 +1,34 @@
+<div class="row">
+  <div class="col-md-12">
+    <h3>Business Transactions for {{budget}}</h3>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <table class="table" id="transaction-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Amount</th>
+          <th>Recurring</th>
+          <th>Business Related</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+  
+      <tbody>
+        {% for transaction in transactions %}
+          <tr>
+            <td>{{transaction.date}}</td>
+            <td>{{transaction.transaction_type}}</td>
+            <td>{{transaction.amount}}</td>
+            <td>{% if transaction.recurring_transaction_def %}Yes{% else %}No{% endif %}</td>
+            <td>{% if transaction.for_business %}Yes{% else %}No{% endif %}
+            <td>{{transaction.notes}}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
