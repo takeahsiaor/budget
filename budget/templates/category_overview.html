@@ -163,6 +163,31 @@ $(document).ready(function(){
         pageLength: 25,
       }
     );
+
+    $('#expense_category-overview').on('draw.dt', function(){
+        $('.get-transactions').click(function(){
+          var bc_id = $(this).data("id");
+          $(".bc-row").removeClass('success');
+          $("#bc-row-"+bc_id).addClass('success');
+
+          $("#transactions").empty();
+          $.get(
+            "{% url 'get_transactions_for_budget_category'%}", 
+            {'pk':bc_id}, 
+            function(response){
+              $('#transactions').html(response);
+              $('#transaction-table').dataTable(
+                {
+                  pageLength: 25,
+                }
+              );
+              $('html, body').animate({
+                scrollTop: $('#transaction-table').offset().top
+              }, 500)
+          });
+        });
+    });
+
     {% endif %}
 
     {% if income_budget_categories %}
@@ -214,9 +239,31 @@ $(document).ready(function(){
             pageLength: 25,
           }
         );
+
+        $('#income_category-overview').on('draw.dt', function(){
+            $('.get-transactions').click(function(){
+              var bc_id = $(this).data("id");
+              $(".bc-row").removeClass('success');
+              $("#bc-row-"+bc_id).addClass('success');
+
+              $("#transactions").empty();
+              $.get(
+                "{% url 'get_transactions_for_budget_category'%}", 
+                {'pk':bc_id}, 
+                function(response){
+                  $('#transactions').html(response);
+                  $('#transaction-table').dataTable(
+                    {
+                      pageLength: 25,
+                    }
+                  );
+                  $('html, body').animate({
+                    scrollTop: $('#transaction-table').offset().top
+                  }, 500)
+              });
+            });
+        });
     {% endif %}
-
-
 
   $('.get-transactions').click(function(){
     var bc_id = $(this).data("id");
@@ -239,6 +286,8 @@ $(document).ready(function(){
         }, 500)
     });
   });
+
+
 })
 </script>
 {% endblock %}

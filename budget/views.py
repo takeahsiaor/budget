@@ -99,7 +99,9 @@ class OverviewView(TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super(OverviewView, self).get_context_data(*args, **kwargs)
         current_year = datetime.datetime.now().year
-        budgets = Budget.objects.filter(year__in=(current_year, current_year-1))
+        budgets = Budget.objects.filter(
+            year__in=(current_year, current_year-1)
+        )
         budget_contexts = []
         categories = Category.objects.all()
         date_data = []

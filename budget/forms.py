@@ -120,6 +120,10 @@ class BudgetCategoryForm(forms.ModelForm):
                 'income': forms.CheckboxInput(),
             }
 
+    def __init__(self, *args, **kwargs):
+        super(BudgetCategoryForm, self).__init__(*args, **kwargs)
+        self.fields['category'].queryset = Category.objects.filter(status=True)
+
     def save(self, budget):
         category = self.cleaned_data['category']
         amount = self.cleaned_data['amount']
